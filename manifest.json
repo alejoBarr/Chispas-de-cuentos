@@ -1,0 +1,19 @@
+{
+  "name": "Chispas de Cuentos: Cuentacuentos con IA",
+  "short_name": "Chispas",
+  "description": "Una aplicación de cuentos interactivos para niños que lee historias en voz alta y genera ilustraciones mágicas y únicas para cada página.",
+  "start_url": "/index.html",
+  "id": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#a855f7",
+  "icons": [
+    {
+      "src": "vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
