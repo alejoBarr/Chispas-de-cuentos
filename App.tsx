@@ -1,18 +1,58 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { StoryViewer } from './components/StoryViewer';
 import { ChatBot } from './components/ChatBot';
 import { Guide } from './components/Guide';
 import { StoryCreator } from './components/StoryCreator';
-import { BookOpenIcon, ChatBubbleLeftRightIcon, InformationCircleIcon, SparklesIcon, TrashIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from './components/Icon';
+import { BookOpenIcon, ChatBubbleLeftRightIcon, InformationCircleIcon, SparklesIcon, TrashIcon, SpeakerWaveIcon, SpeakerXMarkIcon, BookStackIcon, ShareIcon } from './components/Icon';
+import { Bookshelf } from './components/Bookshelf';
 import { Story } from './types';
 import { STORIES } from './constants';
 import { useStoryStorage } from './hooks/useStoryStorage';
+import { useSoundEffects } from './hooks/useSoundEffects';
 
-type AppMode = 'welcome' | 'story' | 'chat' | 'guide';
+type AppMode = 'welcome' | 'story' | 'chat' | 'library' | 'guide';
 type StoryView = 'selection' | 'viewer' | 'creator';
 type SoundType = 'page-turn' | 'magic-sparkle' | 'book-open' | 'ui-click';
 
-const WelcomeScreen: React.FC<{onStart: () => void}> = ({ onStart }) => (
+const WelcomeScreen: React.FC<{onStart: () => void; playSound: (sound: SoundType) => void}> = ({ onStart, playSound }) => {
+    const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            e.preventDefault(); // Evita que el navegador muestre su propio banner automáticamente
+            setInstallPrompt(e); // Guardamos el evento para usarlo en nuestro botón
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstall = () => {
+        if (!installPrompt) return;
+        playSound('ui-click');
+        installPrompt.prompt();
+        installPrompt.userChoice.then((choiceResult: any) => {
+            setInstallPrompt(null); // Ocultamos el botón después de la acción
+        });
+    };
+
+    const handleShareApp = async () => {
+        playSound('ui-click');
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Chispas de Cuentos ✨",
+                    text: "¡Descubre un mundo de cuentos mágicos con IA! Lee, escucha y crea tus propias historias.",
+                    url: window.location.href,
+                });
+            } catch (error) {
+                console.error('Error al compartir', error);
+            }
+        } else {
+            alert('¡Copia el enlace de tu navegador para invitar a tus amigos!');
+        }
+    };
+
+    return (
     <div className="flex flex-col items-center justify-center text-center p-4 sm:p-8 min-h-screen w-full">
         {/* Main content, pushed to the center and taking up available space */}
         <div className="flex-grow flex flex-col items-center justify-center">
@@ -50,13 +90,31 @@ const WelcomeScreen: React.FC<{onStart: () => void}> = ({ onStart }) => (
         <div className="w-full max-w-md pb-4">
             <div className="mb-4 p-4 bg-white/50 backdrop-blur-sm rounded-2xl shadow-md">
                 <div className="flex items-center justify-center gap-4">
-                    <img src="/vite.svg" alt="Icono de Chispas de Cuentos" className="w-16 h-16 flex-shrink-0"/>
+                    <div className="w-16 h-16 flex-shrink-0 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shadow-inner">
+                        <SparklesIcon className="w-10 h-10" />
+                    </div>
                     <div className="text-left">
                         <h3 className="text-lg font-bold text-purple-800">¡Lleva la magia contigo!</h3>
                         <p className="text-sm text-gray-600">
-                            Instala la aplicación para leer tus cuentos favoritos sin conexión.
+                            Comparte o instala la app para disfrutar los cuentos.
                         </p>
-                        <p className="text-xs text-purple-500 mt-1 font-semibold">Busca "Añadir a pantalla de inicio" en el menú de tu navegador.</p>
+                        <p className="text-xs text-purple-500 mt-1 font-semibold">Busca "Añadir a pantalla de inicio" en el menú de tu navegador 📱</p>
+                        <div className="flex gap-2 mt-2">
+                            {installPrompt && (
+                                <button 
+                                    onClick={handleInstall}
+                                    className="flex items-center gap-1 text-xs bg-pink-500 text-white px-3 py-1 rounded-full font-bold hover:bg-pink-600 transition-colors shadow-sm"
+                                >
+                                    <SparklesIcon className="w-3 h-3" /> Instalar App
+                                </button>
+                            )}
+                            <button 
+                                onClick={handleShareApp}
+                                className="flex items-center gap-1 text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full font-bold hover:bg-purple-300 transition-colors"
+                            >
+                                <ShareIcon className="w-3 h-3" /> Compartir App
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,39 +124,65 @@ const WelcomeScreen: React.FC<{onStart: () => void}> = ({ onStart }) => (
             </div>
         </div>
     </div>
-);
+    );
+};
 
-const StoryCard: React.FC<{ story: Story; onSelect: (story: Story) => void; onDelete?: (id: string) => void; playSound: (sound: SoundType) => void; }> = ({ story, onSelect, onDelete, playSound }) => (
-  <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:scale-105 h-full">
-    {onDelete && story.id && (
-        <button 
-          onClick={() => { 
-            playSound('ui-click'); 
-            if(onDelete) onDelete(story.id!); 
-          }} 
-          className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition-colors" 
-          aria-label="Borrar cuento">
+const StoryCard: React.FC<{ story: Story; onSelect: (story: Story) => void; onDelete?: (id: string) => void; playSound: (sound: SoundType) => void; }> = ({ story, onSelect, onDelete, playSound }) => {
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  return (
+    <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition-transform transform hover:scale-105 h-full">
+      {onDelete && story.id && !confirmDelete && (
+          <button
+            onClick={() => { playSound('ui-click'); setConfirmDelete(true); }}
+            className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition-colors"
+            aria-label="Borrar cuento"
+          >
             <TrashIcon />
-        </button>
-    )}
-    <div className="text-6xl mb-4">{story.emoji}</div>
-    <h3 className="text-2xl font-bold text-gray-800 mb-2">{story.title}</h3>
-    {story.description && <p className="text-gray-600 mb-4 flex-grow">{story.description}</p>}
-    {story.tags && (
-        <div className="flex flex-wrap justify-center gap-2 mb-4">
-            {story.tags.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">{tag}</span>
-            ))}
+          </button>
+      )}
+
+      {confirmDelete ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-4 w-full">
+          <p className="text-lg font-bold text-gray-700">¿Borrar este cuento?</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { playSound('ui-click'); onDelete && onDelete(story.id!); }}
+              className="px-5 py-2 bg-red-500 text-white font-bold rounded-full hover:bg-red-600 transition-colors"
+            >
+              Sí, borrar
+            </button>
+            <button
+              onClick={() => { playSound('ui-click'); setConfirmDelete(false); }}
+              className="px-5 py-2 bg-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-300 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
-    )}
-    <button
-      onClick={() => { playSound('book-open'); onSelect(story); }}
-      className="mt-auto px-6 py-2 bg-pink-500 text-white font-bold rounded-full shadow-md hover:bg-pink-600 transition-colors"
-    >
-      Leer Cuento
-    </button>
-  </div>
-);
+      ) : (
+        <>
+          <div className="text-6xl mb-4">{story.emoji}</div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">{story.title}</h3>
+          {story.description && <p className="text-gray-600 mb-4 flex-grow">{story.description}</p>}
+          {story.tags && (
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                  {story.tags.map(tag => (
+                      <span key={tag} className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full">{tag}</span>
+                  ))}
+              </div>
+          )}
+          <button
+            onClick={() => { playSound('book-open'); onSelect(story); }}
+            className="mt-auto px-6 py-2 bg-pink-500 text-white font-bold rounded-full shadow-md hover:bg-pink-600 transition-colors"
+          >
+            Leer Cuento
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
 
 const CreatorCard: React.FC<{ onClick: () => void; playSound: (sound: SoundType) => void; }> = ({ onClick, playSound }) => (
     <div onClick={() => { playSound('magic-sparkle'); onClick(); }} className="cursor-pointer bg-gradient-to-br from-pink-400 to-purple-500 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center text-center text-white transition-transform transform hover:scale-105 h-full">
@@ -162,63 +246,83 @@ export default function App() {
   const [storyView, setStoryView] = useState<StoryView>('selection');
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const { savedStories, saveStory, deleteStory } = useStoryStorage();
-  
-  const musicRef = useRef<HTMLAudioElement>(null);
-  const pageTurnSoundRef = useRef<HTMLAudioElement>(null);
-  const magicSparkleSoundRef = useRef<HTMLAudioElement>(null);
-  const bookOpenSoundRef = useRef<HTMLAudioElement>(null);
-  const uiClickSoundRef = useRef<HTMLAudioElement>(null);
-
 
   const [isMuted, setIsMuted] = useState(false);
-  
-  const playSound = (sound: SoundType) => {
-      if (isMuted) return;
-      let audioRef: React.RefObject<HTMLAudioElement> | null = null;
-      switch (sound) {
-          case 'page-turn': audioRef = pageTurnSoundRef; break;
-          case 'magic-sparkle': audioRef = magicSparkleSoundRef; break;
-          case 'book-open': audioRef = bookOpenSoundRef; break;
-          case 'ui-click': audioRef = uiClickSoundRef; break;
-      }
-      if (audioRef?.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(e => console.error(`Sound ${sound} failed`, e));
-      }
-  };
+  const { playSound: playSoundEffect, setMuted } = useSoundEffects();
 
-  const playMusic = () => {
-      if(musicRef.current && !isMuted) {
-          musicRef.current.play().catch(e => console.error("Audio play failed", e));
-      }
-  };
+  // --- Ambient music via Web Audio API ---
+  const musicCtxRef = useRef<AudioContext | null>(null);
+  const musicNodesRef = useRef<{ osc: OscillatorNode; gain: GainNode } | null>(null);
 
-  const stopMusic = () => {
-      if(musicRef.current) {
-          musicRef.current.pause();
-          musicRef.current.currentTime = 0;
+  const playMusic = useCallback(() => {
+    if (isMuted) return;
+    try {
+      if (!musicCtxRef.current || musicCtxRef.current.state === 'closed') {
+        musicCtxRef.current = new AudioContext();
       }
-  };
+      const ctx = musicCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      if (musicNodesRef.current) return; // already playing
+
+      const notes = [261.6, 293.7, 329.6, 349.2, 392, 440, 493.9]; // C D E F G A B
+      let noteIdx = 0;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.connect(ctx.destination);
+
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(notes[noteIdx], ctx.currentTime);
+      osc.connect(gain);
+      osc.start();
+
+      const interval = setInterval(() => {
+        if (!musicNodesRef.current) { clearInterval(interval); return; }
+        noteIdx = (noteIdx + 1) % notes.length;
+        musicNodesRef.current.osc.frequency.setTargetAtTime(notes[noteIdx], ctx.currentTime, 0.5);
+      }, 1800);
+
+      musicNodesRef.current = { osc, gain };
+      (musicNodesRef.current as any)._interval = interval;
+    } catch (e) {
+      console.warn('Music failed', e);
+    }
+  }, [isMuted]);
+
+  const stopMusic = useCallback(() => {
+    if (musicNodesRef.current) {
+      try {
+        clearInterval((musicNodesRef.current as any)._interval);
+        musicNodesRef.current.gain.gain.setTargetAtTime(0, musicCtxRef.current!.currentTime, 0.3);
+        setTimeout(() => {
+          try { musicNodesRef.current?.osc.stop(); } catch (_) {}
+          musicNodesRef.current = null;
+        }, 500);
+      } catch (e) { musicNodesRef.current = null; }
+    }
+  }, []);
+
+  const playSound = useCallback((sound: SoundType) => {
+    playSoundEffect(sound);
+  }, [playSoundEffect]);
 
   const toggleMute = () => {
-      playSound('ui-click');
-      const newMutedState = !isMuted;
-      setIsMuted(newMutedState);
-      if (musicRef.current) {
-          musicRef.current.muted = newMutedState;
-          if (newMutedState) {
-            musicRef.current.pause();
-          } else if (mode === 'story' && storyView === 'viewer') {
-            musicRef.current.play();
-          }
-      }
+    playSound('ui-click');
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    setMuted(newMuted);
+    if (newMuted) {
+      stopMusic();
+    } else if (mode === 'story' && storyView === 'viewer') {
+      playMusic();
+    }
   };
-  
+
   const handleSelectStory = (story: Story) => {
     setSelectedStory(story);
     setStoryView('viewer');
     playMusic();
-  }
+  };
 
   const handleGoHome = () => {
     setMode('welcome');
@@ -226,18 +330,19 @@ export default function App() {
     setSelectedStory(null);
     stopMusic();
   };
-  
+
   const handleStoryCreated = (story: Story) => {
-      setSelectedStory(story);
-      setStoryView('viewer');
-      playMusic();
-  }
+    const saved = saveStory(story);
+    setSelectedStory(saved);
+    setStoryView('viewer');
+    playMusic();
+  };
 
   const handleSaveStory = (storyToSave: Story) => {
     const saved = saveStory(storyToSave);
     setSelectedStory(saved);
   };
-  
+
   const handleBackToSelection = () => {
     setSelectedStory(null);
     setStoryView('selection');
@@ -273,13 +378,16 @@ export default function App() {
       return <WelcomeScreen onStart={() => {
           playSound('book-open');
           setMode('story');
-      }} />;
+      }} playSound={playSound} />;
     }
     if (mode === 'chat') {
       return <ChatBot playSound={playSound} />;
     }
     if (mode === 'guide') {
       return <Guide />;
+    }
+    if (mode === 'library') {
+      return <Bookshelf playSound={playSound} />;
     }
     if (mode === 'story') {
       switch (storyView) {
@@ -297,12 +405,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-purple-50 text-gray-800">
-      {/* Audio players */}
-      <audio ref={musicRef} src="https://cdn.pixabay.com/audio/2022/11/22/audio_8797f3c448.mp3" loop />
-      <audio ref={pageTurnSoundRef} src="https://cdn.pixabay.com/audio/2022/10/24/audio_359332b85e.mp3" />
-      <audio ref={magicSparkleSoundRef} src="https://cdn.pixabay.com/audio/2022/11/17/audio_835528f1b3.mp3" />
-      <audio ref={bookOpenSoundRef} src="https://cdn.pixabay.com/audio/2022/01/24/audio_0345163365.mp3" />
-      <audio ref={uiClickSoundRef} src="https://cdn.pixabay.com/audio/2022/03/15/audio_2433fe151c.mp3" />
 
 
       {mode !== 'welcome' && (
@@ -335,6 +437,13 @@ export default function App() {
                 label="Cuentos"
             >
                 <BookOpenIcon />
+            </NavButton>
+            <NavButton
+                isActive={mode === 'library'}
+                onClick={() => { playSound('ui-click'); setMode('library'); stopMusic(); }}
+                label="Lecturas"
+            >
+                <BookStackIcon />
             </NavButton>
             <NavButton
                 isActive={mode === 'chat'}

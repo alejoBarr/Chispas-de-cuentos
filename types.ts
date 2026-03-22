@@ -1,6 +1,7 @@
 export interface StoryPage {
   text: string;
   imagePrompt: string;
+  image?: string;
 }
 
 export interface Story {

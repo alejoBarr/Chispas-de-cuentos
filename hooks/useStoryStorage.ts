@@ -10,7 +10,13 @@ export const useStoryStorage = () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setSavedStories(JSON.parse(stored));
+        let parsedStories = JSON.parse(stored);
+        // Ensure the limit is respected even on initial load
+        if (parsedStories.length > 5) {
+          parsedStories = parsedStories.slice(-5);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedStories));
+        }
+        setSavedStories(parsedStories);
       }
     } catch (error) {
       console.error("Failed to load stories from localStorage", error);
@@ -18,22 +24,31 @@ export const useStoryStorage = () => {
   }, []);
 
   const saveStory = useCallback((story: Story): Story => {
-    // Ensure the story has the generated flag
+    // Ensure the story has the generated flag and a unique ID
     const newStory = { ...story, id: `gen_${Date.now()}`, isGenerated: true };
-    const updatedStories = [...savedStories, newStory];
-    setSavedStories(updatedStories);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStories));
+    
+    setSavedStories(prev => {
+      let updatedStories = [...prev, newStory];
+      
+      // Limit to 5 stories (FIFO: remove oldest if more than 5)
+      if (updatedStories.length > 5) {
+        updatedStories = updatedStories.slice(-5);
+      }
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStories));
+      return updatedStories;
+    });
+    
     return newStory; // Return the story with the new ID
-  }, [savedStories]);
+  }, []);
 
   const deleteStory = useCallback((storyId: string) => {
-    const isConfirmed = window.confirm("¿Estás seguro de que quieres borrar este cuento para siempre?");
-    if (isConfirmed) {
-        const updatedStories = savedStories.filter(s => s.id !== storyId);
-        setSavedStories(updatedStories);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStories));
-    }
-  }, [savedStories]);
+    setSavedStories(prev => {
+      const updatedStories = prev.filter(s => s.id !== storyId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStories));
+      return updatedStories;
+    });
+  }, []);
 
   return { savedStories, saveStory, deleteStory };
 };

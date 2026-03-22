@@ -1,106 +1,56 @@
-
-import { useState, useRef, useCallback, useEffect } from 'react';
-
-// Helper function to decode base64 string to Uint8Array
-function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-// Helper function to decode raw PCM audio data into an AudioBuffer
-async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  return buffer;
-}
+import { useState, useCallback, useEffect } from 'react';
 
 export const useAudioPlayer = () => {
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
 
     useEffect(() => {
-        // Initialize AudioContext. It's best to create it once.
-        // It might require a user interaction to start in some browsers.
-        if (!audioContextRef.current) {
-            try {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-            } catch (e) {
-                console.error("Web Audio API is not supported in this browser", e);
-            }
-        }
-        
         // Cleanup on unmount
         return () => {
-            if (sourceNodeRef.current) {
-                sourceNodeRef.current.stop();
-            }
-            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-                audioContextRef.current.close();
-            }
+            window.speechSynthesis.cancel();
         };
     }, []);
 
-    const playAudio = useCallback(async (base64Audio: string) => {
-        if (!audioContextRef.current || !base64Audio) return;
+    const playAudio = useCallback((text: string, voiceSelection?: string) => {
+        if (!text) return;
 
-        // Resume context if it's suspended (e.g., due to browser autoplay policies)
-        if (audioContextRef.current.state === 'suspended') {
-            await audioContextRef.current.resume();
-        }
-
-        // Stop any currently playing audio
-        if (sourceNodeRef.current) {
-            sourceNodeRef.current.stop();
-        }
-
-        setIsPlaying(true);
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
         
-        try {
-            const audioBytes = decode(base64Audio);
-            const audioBuffer = await decodeAudioData(audioBytes, audioContextRef.current, 24000, 1);
-            
-            const source = audioContextRef.current.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContextRef.current.destination);
-            
-            source.onended = () => {
-                setIsPlaying(false);
-                sourceNodeRef.current = null;
-            };
-
-            source.start();
-            sourceNodeRef.current = source;
-        } catch(error) {
-            console.error("Failed to play audio:", error);
-            setIsPlaying(false);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES'; // Spanish
+        utterance.rate = 0.9; // Slightly slower for kids
+        utterance.pitch = 1.1; // Slightly higher/friendly pitch
+        
+        // Handle voice selection based on the ID passed from StoryViewer
+        const voices = window.speechSynthesis.getVoices();
+        const esVoices = voices.filter(v => v.lang.startsWith('es'));
+        
+        if (esVoices.length > 0) {
+            // Map the selected voice id ('Kore', 'Puck', etc.) to available spanish voices
+            let voiceIndex = 0;
+            switch(voiceSelection) {
+                case 'Kore': voiceIndex = 0; break;
+                case 'Puck': voiceIndex = 1; break;
+                case 'Zephyr': voiceIndex = 2; break;
+                case 'Charon': voiceIndex = 3; break;
+            }
+            // Use modulo in case there are fewer voices than options
+            utterance.voice = esVoices[voiceIndex % esVoices.length];
         }
+
+        utterance.onstart = () => setIsPlaying(true);
+        utterance.onend = () => setIsPlaying(false);
+        utterance.onerror = (e) => {
+            console.error("Speech synthesis error", e);
+            setIsPlaying(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
     }, []);
     
     const stopAudio = useCallback(() => {
-        if (sourceNodeRef.current) {
-            sourceNodeRef.current.stop();
-            setIsPlaying(false);
-            sourceNodeRef.current = null;
-        }
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
     }, []);
 
     return { playAudio, stopAudio, isPlaying };

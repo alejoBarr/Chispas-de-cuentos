@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateImage, generateSpeech } from '../services/geminiService';
+import { generateImage } from '../services/geminiService';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { Spinner } from './Spinner';
 import { Story } from '../types';
@@ -38,30 +38,38 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
     stopAudio();
     try {
       const page = STORY_PAGES[pageIndex];
-      const generatedImageUrl = await generateImage(page.imagePrompt);
+      // Si la página ya tiene una imagen estática o URL definida, úsala directamente
+      if (page.image) {
+        const img = new Image();
+        img.src = page.image;
+        img.onload = () => {
+          setImageUrl(page.image!);
+          setIsLoadingImage(false);
+        };
+        img.onerror = () => {
+          console.error("Failed to load static image:", page.image);
+          setImageUrl(page.image!); 
+          setIsLoadingImage(false);
+        };
+        return; // Exit early as loading is handled by img.onload/onerror
+      }
+      
+      // If no static image, generate one
+      const generatedImageUrl = await generateImage(page.imagePrompt, story.emoji);
       setImageUrl(generatedImageUrl);
+      setIsLoadingImage(false);
     } catch (err) {
       setError("¡Oh no! La magia para dibujar se esfumó. Por favor, inténtalo de nuevo.");
       console.error(err);
-    } finally {
       setIsLoadingImage(false);
     }
-  }, [stopAudio, STORY_PAGES]);
+  }, [stopAudio, STORY_PAGES, story.emoji]);
   
-  const loadPageAudio = useCallback(async (pageIndex: number, voice: string) => {
-    setIsLoadingAudio(true);
-    try {
-      const page = STORY_PAGES[pageIndex];
-      const generatedAudio = await generateSpeech(page.text, voice);
-      setAudio(generatedAudio);
-      playAudio(generatedAudio);
-    } catch (err) {
-      setError("¡Vaya! Parece que el narrador se quedó sin voz. Inténtalo de nuevo.");
-      console.error(err);
-    } finally {
-      setIsLoadingAudio(false);
-    }
-  }, [playAudio, STORY_PAGES]);
+  const updateAudioText = useCallback((pageIndex: number) => {
+    setIsLoadingAudio(false); 
+    const page = STORY_PAGES[pageIndex];
+    setAudio(page.text);
+  }, [STORY_PAGES]);
 
   useEffect(() => {
     loadPageImage(currentPage);
@@ -69,9 +77,9 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
   
   useEffect(() => {
     if (!isLoadingImage && imageUrl) {
-      loadPageAudio(currentPage, selectedVoice);
+      updateAudioText(currentPage);
     }
-  }, [currentPage, selectedVoice, isLoadingImage, imageUrl, loadPageAudio]);
+  }, [currentPage, isLoadingImage, imageUrl, updateAudioText]);
 
 
   const handleNext = () => {
@@ -88,10 +96,12 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
     }
   };
 
-  const handleReplayAudio = () => {
+  const handleToggleAudio = () => {
     playSound('ui-click');
-    if (audio && !isPlaying) {
-      playAudio(audio);
+    if (isPlaying) {
+      stopAudio();
+    } else if (audio) {
+      playAudio(audio, selectedVoice);
     }
   };
   
@@ -190,13 +200,18 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
         </button>
         
         <button 
-          onClick={handleReplayAudio}
-          disabled={isLoading || isPlaying}
+          onClick={handleToggleAudio}
+          disabled={isLoadingAudio}
           className="p-4 bg-pink-500 rounded-full shadow-lg text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-110"
         >
-            {isPlaying || isLoadingAudio ? (
+            {isPlaying ? (
+               // Stop Icon (Square)
+               <svg className="w-8 h-8 animate-pulse text-red-100" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd"></path></svg>
+            ) : isLoadingAudio ? (
+                // Loading Icon
                 <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zM6 7a1 1 0 011 1v4a1 1 0 11-2 0V8a1 1 0 011-1zm8 0a1 1 0 011 1v4a1 1 0 11-2 0V8a1 1 0 011-1z"></path></svg>
             ) : (
+                // Play Icon (Triangle)
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 011.555.832l3 6a1 1 0 010 .336l-3 6A1 1 0 017 16V4z"></path></svg>
             )}
         </button>
