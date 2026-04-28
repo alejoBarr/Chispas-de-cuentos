@@ -1,25 +1,11 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-
-# Dependency directories
+# Dependencias
 node_modules/
+.pnp
+.pnp.js
 
-# Build output
+# Producción
 dist/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-
-# Environment variables (IMPORTANTE: Esto oculta tu clave)
+# Secretos y variables de entorno
 .env
 .env.local
-.env.*.local
