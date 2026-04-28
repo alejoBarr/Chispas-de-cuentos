@@ -265,15 +265,16 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playMusic = useCallback(() => {
-    if (isMuted) return;
     if (!audioRef.current) {
       // Create the audio element on first play
       audioRef.current = new Audio('/sounds/background.mp3');
       audioRef.current.loop = true;
       audioRef.current.volume = 0.2; // Adjust volume as needed
     }
-    audioRef.current.play().catch(e => console.warn('Music play failed', e));
-  }, [isMuted]);
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(e => console.warn('Music play failed', e));
+    }
+  }, []);
 
   const stopMusic = useCallback(() => {
     if (audioRef.current) {
@@ -281,39 +282,43 @@ export default function App() {
     }
   }, []);
 
+  // Control centralizado de la música de fondo
+  useEffect(() => {
+    // La música suena si: no está silenciado, no estamos en bienvenida 
+    // y NO estamos leyendo un cuento (viewer)
+    const shouldPlay = !isMuted && mode !== 'welcome' && !(mode === 'story' && storyView === 'viewer');
+    
+    if (shouldPlay) {
+      playMusic();
+    } else {
+      stopMusic();
+    }
+  }, [mode, storyView, isMuted, playMusic, stopMusic]);
+
   const playSound = useCallback((sound: SoundType) => {
     playSoundEffect(sound);
   }, [playSoundEffect]);
 
   const toggleMute = () => {
     playSound('ui-click');
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    if (newMuted) {
-      stopMusic();
-    } else if (mode === 'story' && storyView === 'viewer') {
-      playMusic();
-    }
+    setIsMuted(!isMuted);
   };
 
   const handleSelectStory = (story: Story) => {
     setSelectedStory(story);
     setStoryView('viewer');
-    playMusic();
   };
 
   const handleGoHome = () => {
     setMode('welcome');
     setStoryView('selection');
     setSelectedStory(null);
-    stopMusic();
   };
 
   const handleStoryCreated = (story: Story) => {
     const saved = saveStory(story);
     setSelectedStory(saved);
     setStoryView('viewer');
-    playMusic();
   };
 
   const handleSaveStory = (storyToSave: Story) => {
@@ -324,7 +329,6 @@ export default function App() {
   const handleBackToSelection = () => {
     setSelectedStory(null);
     setStoryView('selection');
-    stopMusic();
   }
 
   const handleStartCreator = () => {
@@ -416,7 +420,6 @@ export default function App() {
                       playSound('ui-click');
                       setMode('story');
                       setStoryView('selection');
-                      stopMusic();
                   }}
                   label="Cuentos"
               >
@@ -424,21 +427,21 @@ export default function App() {
               </NavButton>
               <NavButton
                   isActive={mode === 'library'}
-                  onClick={() => { playSound('ui-click'); setMode('library'); stopMusic(); }}
+                  onClick={() => { playSound('ui-click'); setMode('library'); }}
                   label="Lecturas"
               >
                   <BookStackIcon />
               </NavButton>
               <NavButton
                   isActive={mode === 'chat'}
-                  onClick={() => { playSound('ui-click'); setMode('chat'); stopMusic(); }}
+                  onClick={() => { playSound('ui-click'); setMode('chat'); }}
                   label="Chispa"
               >
                   <ChatBubbleLeftRightIcon />
               </NavButton>
               <NavButton
                   isActive={mode === 'guide'}
-                  onClick={() => { playSound('ui-click'); setMode('guide'); stopMusic(); }}
+                  onClick={() => { playSound('ui-click'); setMode('guide'); }}
                   label="Guía"
               >
                   <InformationCircleIcon />
