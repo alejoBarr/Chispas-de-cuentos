@@ -11,8 +11,12 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GOOGLE_BOOKS_API_KEY': JSON.stringify(env.GOOGLE_BOOKS_API_KEY || env.VITE_GOOGLE_API_KEY || ""),
+        'process.env.GEMINI_API_KEY_1': JSON.stringify(env.GEMINI_API_KEY_1 || env.GEMINI_API_KEY || env.VITE_GOOGLE_API_KEY || ""),
+        'process.env.GEMINI_API_KEY_2': JSON.stringify(env.GEMINI_API_KEY_2 || env.VITE_GEMINI_API_KEY_2 || ""),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GOOGLE_API_KEY || ""),
+        'process.env.GOOGLE_API_KEY': JSON.stringify(env.GOOGLE_API_KEY || env.VITE_GOOGLE_API_KEY || ""),
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY_1 || env.GEMINI_API_KEY || env.VITE_GOOGLE_API_KEY || "")
       },
       resolve: {
         alias: {

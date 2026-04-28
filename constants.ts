@@ -51,23 +51,23 @@ export const STORIES: Story[] = [
       },
       {
         text: "Un día, decidió intentarlo. Se estiró y se retorció hasta que tomó la forma de un conejo feliz con orejas largas y flexibles.",
-        imagePrompt: "La pequeña nube de dibujos animados se ha transformado en la forma perfecta de un conejo sonriente. Todavía tiene su linda cara. Estilo de arte simple y claro, ilustración de libro infantil.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%2387CEEB%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%90%87%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/nubi/p2.png",
+        imagePrompt: ''
       },
       {
         text: "Los niños que jugaban en el parque de abajo la vieron. '¡Miren!', gritó una niña. '¡Un conejito de nube!' Todos saludaron a Nubi con alegría.",
-        imagePrompt: "Vista desde el cielo, mirando hacia abajo a un grupo de niños de dibujos animados en un parque verde que señalan y saludan felices a la nube con forma de conejo. Escena alegre y colorida, estilo de libro de cuentos.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%23B0E0E6%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%A7%92%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/nubi/p3.png",
+        imagePrompt: ''
       },
       {
         text: "Animada, Nubi se transformó en un helado gigante, luego en un barco de vela y después en un león con una melena esponjosa.",
-        imagePrompt: "Una secuencia de tres imágenes que muestran a la nube de dibujos animados transformada en un cono de helado, un velero y la cabeza de un león. Estilo de libro de cuentos, mostrando la creatividad de la nube.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%23ADD8E6%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%8D%A6%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/nubi/p4.png",
+        imagePrompt: ''
       },
       {
         text: "Nubi había encontrado su pasión. Cada día, pintaba el cielo con sus creaciones, convirtiéndolo en la galería de arte más grande y feliz del mundo.",
-        imagePrompt: "La pequeña nube artista de dibujos animados flota felizmente en el centro de un cielo lleno de muchas otras nubes con formas divertidas (un coche, una estrella, un pez). El sol sonríe. Final vibrante y alegre, estilo de ilustración de libro de cuentos.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%2387CEFA%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%E2%98%80%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/nubi/p5.png",
+        imagePrompt: ''
       }
     ]
   },
@@ -116,18 +116,17 @@ export const STORIES: Story[] = [
     pages: [
       {
         text: "En un acogedor bosque de hongos luminosos, vivía un zorrito llamado Finn. Finn tenía una linterna mágica que podía hacer crecer las plantas al instante.",
-        imagePrompt: "Un lindo zorro bebé de dibujos animados sosteniendo una linterna brillante en un bosque mágico de hongos gigantes y luminosos por la noche. Estilo de ilustración de libro de cuentos, colores vibrantes.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%2398FB98%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%A6%8A%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/finn/p1.png",
+        imagePrompt: ''
       },
       {
         text: "Un día, Finn encontró una semilla pequeña y sin color. '¡Me pregunto en qué te convertirás!', susurró, apuntando su linterna hacia ella.",
-        imagePrompt: "El lindo zorro de dibujos animados mirando con curiosidad una pequeña semilla simple en su pata. Su linterna mágica apunta a la semilla, proyectando un cálido resplandor. Foto de primer plano, pelaje detallado, estilo de libro de cuentos.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%2390EE90%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%8C%B1%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/finn/p2.png",
+        imagePrompt: ''
       },
       {
         text: "¡Al instante, un tallo de frijoles gigante y brillante se disparó hacia las nubes! Estaba cubierto de hojas relucientes de todos los colores del arcoíris.",
-        imagePrompt: "Un tallo de frijoles gigante y brillante con hojas de arcoíris que crece rápidamente hacia el cielo desde el suelo. El lindo zorro de dibujos animados está en la parte inferior, mirando hacia arriba con asombro. Escena dinámica y mágica, ilustración de libro de cuentos.",
-        image: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22800%22%3E%3Crect%20width%3D%22800%22%20height%3D%22800%22%20fill%3D%22%238FBC8F%22%20%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%22400%22%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E"
+        image: "/assets/stories/finn/p3.png"
       },
       {
         text: "Finn, lleno de valentía, decidió trepar por el tallo de frijoles. Quería ver el mundo mágico que le esperaba en la cima.",

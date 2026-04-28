@@ -54,6 +54,14 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
         return; // Exit early as loading is handled by img.onload/onerror
       }
       
+      // Si es un cuento generado por IA, mostramos el emoji en todas las páginas
+      // para mantener la coherencia visual sin depender de servicios externos.
+      if (story.isGenerated) {
+        setImageUrl('');
+        setIsLoadingImage(false);
+        return;
+      }
+
       // If no static image, generate one
       const generatedImageUrl = await generateImage(page.imagePrompt, story.emoji);
       setImageUrl(generatedImageUrl);
@@ -63,7 +71,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
       console.error(err);
       setIsLoadingImage(false);
     }
-  }, [stopAudio, STORY_PAGES, story.emoji]);
+  }, [stopAudio, STORY_PAGES, story.emoji, story.isGenerated]);
   
   const updateAudioText = useCallback((pageIndex: number) => {
     setIsLoadingAudio(false); 
@@ -76,10 +84,10 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
   }, [currentPage, loadPageImage]);
   
   useEffect(() => {
-    if (!isLoadingImage && imageUrl) {
+    if (!isLoadingImage) {
       updateAudioText(currentPage);
     }
-  }, [currentPage, isLoadingImage, imageUrl, updateAudioText]);
+  }, [currentPage, isLoadingImage, updateAudioText]);
 
 
   const handleNext = () => {
@@ -174,15 +182,25 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ story, onBack, onSaveS
           </select>
       </div>
 
-      <div className="w-full aspect-square bg-purple-200 rounded-2xl shadow-lg flex items-center justify-center mb-4 overflow-hidden border-4 border-white">
+      <div className="w-full aspect-square bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 overflow-hidden border-4 border-purple-200 relative">
         {isLoadingImage ? (
-          <Spinner text="Creando una ilustración mágica..." />
+          <div>
+            <Spinner text="Abriendo el baúl de los cuentos..." />
+          </div>
         ) : error ? (
-           <div className="text-center p-4">
-              <p className="text-red-500 font-bold">{error}</p>
+           <div className="text-center p-6 bg-white/60 backdrop-blur-sm rounded-2xl mx-4">
+              <div className="text-7xl mb-2 drop-shadow-lg">{story.emoji}</div>
+              <p className="text-red-600 font-bold mb-1">{error}</p>
+              <p className="text-sm text-purple-800 italic">¡Usa tu imaginación mientras vuelve la magia!</p>
            </div>
+        ) : imageUrl ? (
+          <img src={imageUrl} alt="Ilustración del cuento" className="w-full h-full object-cover" />
         ) : (
-          <img src={imageUrl} alt="Generated story illustration" className="w-full h-full object-cover" />
+          <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-purple-50 to-pink-50">
+             <div className="text-[150px] sm:text-[200px] drop-shadow-2xl transform hover:scale-105 transition-transform duration-500 cursor-default select-none">
+                {story.emoji}
+             </div>
+          </div>
         )}
       </div>
 

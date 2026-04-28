@@ -1,14 +1,17 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { StoryViewer } from './components/StoryViewer';
-import { ChatBot } from './components/ChatBot';
-import { Guide } from './components/Guide';
-import { StoryCreator } from './components/StoryCreator';
+import React, { useState, useMemo, useRef, useCallback, useEffect, lazy, Suspense } from 'react';
 import { BookOpenIcon, ChatBubbleLeftRightIcon, InformationCircleIcon, SparklesIcon, TrashIcon, SpeakerWaveIcon, SpeakerXMarkIcon, BookStackIcon, ShareIcon } from './components/Icon';
-import { Bookshelf } from './components/Bookshelf';
 import { Story } from './types';
 import { STORIES } from './constants';
 import { useStoryStorage } from './hooks/useStoryStorage';
 import { useSoundEffects } from './hooks/useSoundEffects';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Carga perezosa para evitar que errores en las librerías de IA bloqueen toda la aplicación
+const StoryViewer = lazy(() => import('./components/StoryViewer').then(m => ({ default: m.StoryViewer })));
+const ChatBot = lazy(() => import('./components/ChatBot').then(m => ({ default: m.ChatBot })));
+const Guide = lazy(() => import('./components/Guide').then(m => ({ default: m.Guide })));
+const StoryCreator = lazy(() => import('./components/StoryCreator').then(m => ({ default: m.StoryCreator })));
+const Bookshelf = lazy(() => import('./components/Bookshelf').then(m => ({ default: m.Bookshelf })));
 
 type AppMode = 'welcome' | 'story' | 'chat' | 'library' | 'guide';
 type StoryView = 'selection' | 'viewer' | 'creator';
@@ -245,60 +248,36 @@ export default function App() {
   const [mode, setMode] = useState<AppMode>('welcome');
   const [storyView, setStoryView] = useState<StoryView>('selection');
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const { savedStories, saveStory, deleteStory } = useStoryStorage();
+
+  // Defensa contra fallos en el almacenamiento local
+  const storage = useStoryStorage();
+  const savedStories = storage?.savedStories || [];
+  const saveStory = storage?.saveStory || ((s: Story) => s);
+  const deleteStory = storage?.deleteStory || (() => {});
 
   const [isMuted, setIsMuted] = useState(false);
-  const { playSound: playSoundEffect, setMuted } = useSoundEffects();
+  
+  // Defensa contra fallos en el sistema de sonido
+  const sound = useSoundEffects();
+  const playSoundEffect = sound?.playSound || (() => {});
 
-  // --- Ambient music via Web Audio API ---
-  const musicCtxRef = useRef<AudioContext | null>(null);
-  const musicNodesRef = useRef<{ osc: OscillatorNode; gain: GainNode } | null>(null);
+  // --- Ambient music ---
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playMusic = useCallback(() => {
     if (isMuted) return;
-    try {
-      if (!musicCtxRef.current || musicCtxRef.current.state === 'closed') {
-        musicCtxRef.current = new AudioContext();
-      }
-      const ctx = musicCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-      if (musicNodesRef.current) return; // already playing
-
-      const notes = [261.6, 293.7, 329.6, 349.2, 392, 440, 493.9]; // C D E F G A B
-      let noteIdx = 0;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.04, ctx.currentTime);
-      gain.connect(ctx.destination);
-
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(notes[noteIdx], ctx.currentTime);
-      osc.connect(gain);
-      osc.start();
-
-      const interval = setInterval(() => {
-        if (!musicNodesRef.current) { clearInterval(interval); return; }
-        noteIdx = (noteIdx + 1) % notes.length;
-        musicNodesRef.current.osc.frequency.setTargetAtTime(notes[noteIdx], ctx.currentTime, 0.5);
-      }, 1800);
-
-      musicNodesRef.current = { osc, gain };
-      (musicNodesRef.current as any)._interval = interval;
-    } catch (e) {
-      console.warn('Music failed', e);
+    if (!audioRef.current) {
+      // Create the audio element on first play
+      audioRef.current = new Audio('/sounds/background.mp3');
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.2; // Adjust volume as needed
     }
+    audioRef.current.play().catch(e => console.warn('Music play failed', e));
   }, [isMuted]);
 
   const stopMusic = useCallback(() => {
-    if (musicNodesRef.current) {
-      try {
-        clearInterval((musicNodesRef.current as any)._interval);
-        musicNodesRef.current.gain.gain.setTargetAtTime(0, musicCtxRef.current!.currentTime, 0.3);
-        setTimeout(() => {
-          try { musicNodesRef.current?.osc.stop(); } catch (_) {}
-          musicNodesRef.current = null;
-        }, 500);
-      } catch (e) { musicNodesRef.current = null; }
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
   }, []);
 
@@ -310,7 +289,6 @@ export default function App() {
     playSound('ui-click');
     const newMuted = !isMuted;
     setIsMuted(newMuted);
-    setMuted(newMuted);
     if (newMuted) {
       stopMusic();
     } else if (mode === 'story' && storyView === 'viewer') {
@@ -404,67 +382,74 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-purple-50 text-gray-800">
+    <ErrorBoundary>
+      <div className="min-h-screen flex flex-col bg-purple-50 text-gray-800">
+        {mode !== 'welcome' && (
+          <header className="flex justify-between items-center py-4 px-6">
+              <div>{/* Spacer */}</div>
+              <h1 className="text-4xl sm:text-5xl font-black text-purple-700 drop-shadow-md cursor-pointer text-center" onClick={handleGoHome}>
+                  Chispas de Cuentos ✨
+              </h1>
+              <button onClick={toggleMute} className="p-2 text-purple-600 rounded-full hover:bg-white/80 transition-colors" aria-label="Silenciar música">
+                  {isMuted ? <SpeakerXMarkIcon /> : <SpeakerWaveIcon />}
+              </button>
+          </header>
+        )}
 
-
-      {mode !== 'welcome' && (
-        <header className="flex justify-between items-center py-4 px-6">
-            <div>{/* Spacer */}</div>
-            <h1 className="text-4xl sm:text-5xl font-black text-purple-700 drop-shadow-md cursor-pointer text-center" onClick={handleGoHome}>
-                Chispas de Cuentos ✨
-            </h1>
-            <button onClick={toggleMute} className="p-2 text-purple-600 rounded-full hover:bg-white/80 transition-colors" aria-label="Silenciar música">
-                {isMuted ? <SpeakerXMarkIcon /> : <SpeakerWaveIcon />}
-            </button>
-        </header>
-      )}
-
-      <main className="flex-grow flex items-center justify-center w-full">
-        {renderContent()}
-      </main>
-
-      {mode !== 'welcome' && (
-        <footer className="sticky bottom-0 left-0 right-0 p-4 bg-purple-100/80 backdrop-blur-sm border-t-2 border-white">
-            <nav className="flex justify-center items-center gap-3 sm:gap-6">
-            <NavButton
-                isActive={mode === 'story'}
-                onClick={() => {
-                    playSound('ui-click');
-                    setMode('story');
-                    setStoryView('selection');
-                    stopMusic();
-                }}
-                label="Cuentos"
-            >
-                <BookOpenIcon />
-            </NavButton>
-            <NavButton
-                isActive={mode === 'library'}
-                onClick={() => { playSound('ui-click'); setMode('library'); stopMusic(); }}
-                label="Lecturas"
-            >
-                <BookStackIcon />
-            </NavButton>
-            <NavButton
-                isActive={mode === 'chat'}
-                onClick={() => { playSound('ui-click'); setMode('chat'); stopMusic(); }}
-                label="Chispa"
-            >
-                <ChatBubbleLeftRightIcon />
-            </NavButton>
-            <NavButton
-                isActive={mode === 'guide'}
-                onClick={() => { playSound('ui-click'); setMode('guide'); stopMusic(); }}
-                label="Guía"
-            >
-                <InformationCircleIcon />
-            </NavButton>
-            </nav>
-             <div className="text-center text-xs text-purple-400 mt-4">
-                Desarrollado por José Alejandro Barrios &lt;/JAB&gt;
+        <main className="flex-grow flex items-center justify-center w-full">
+          <Suspense fallback={
+            <div className="text-center p-10">
+              <p className="text-purple-400 italic">Cargando la magia...</p>
             </div>
-        </footer>
-      )}
-    </div>
+          }>
+            {renderContent()}
+          </Suspense>
+        </main>
+        
+        {/* Solo mostrar footer si no estamos en bienvenida y hay contenido */}
+        {mode !== 'welcome' && renderContent() && (
+          <footer className="sticky bottom-0 left-0 right-0 p-4 bg-purple-100/80 backdrop-blur-sm border-t-2 border-white">
+              <nav className="flex justify-center items-center gap-3 sm:gap-6">
+              <NavButton
+                  isActive={mode === 'story'}
+                  onClick={() => {
+                      playSound('ui-click');
+                      setMode('story');
+                      setStoryView('selection');
+                      stopMusic();
+                  }}
+                  label="Cuentos"
+              >
+                  <BookOpenIcon />
+              </NavButton>
+              <NavButton
+                  isActive={mode === 'library'}
+                  onClick={() => { playSound('ui-click'); setMode('library'); stopMusic(); }}
+                  label="Lecturas"
+              >
+                  <BookStackIcon />
+              </NavButton>
+              <NavButton
+                  isActive={mode === 'chat'}
+                  onClick={() => { playSound('ui-click'); setMode('chat'); stopMusic(); }}
+                  label="Chispa"
+              >
+                  <ChatBubbleLeftRightIcon />
+              </NavButton>
+              <NavButton
+                  isActive={mode === 'guide'}
+                  onClick={() => { playSound('ui-click'); setMode('guide'); stopMusic(); }}
+                  label="Guía"
+              >
+                  <InformationCircleIcon />
+              </NavButton>
+              </nav>
+               <div className="text-center text-xs text-purple-400 mt-4">
+                  Desarrollado por José Alejandro Barrios &lt;/JAB&gt;
+              </div>
+          </footer>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

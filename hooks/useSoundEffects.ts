@@ -6,7 +6,6 @@ import { useCallback, useRef } from 'react';
  */
 export const useSoundEffects = () => {
     const audioCtxRef = useRef<AudioContext | null>(null);
-    const isMutedRef = useRef(false);
 
     const getCtx = useCallback((): AudioContext => {
         if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
@@ -19,13 +18,9 @@ export const useSoundEffects = () => {
         return audioCtxRef.current;
     }, []);
 
-    const setMuted = useCallback((muted: boolean) => {
-        isMutedRef.current = muted;
-    }, []);
 
     /** Soft UI click — short tick */
     const playUiClick = useCallback(() => {
-        if (isMutedRef.current) return;
         const ctx = getCtx();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -42,7 +37,6 @@ export const useSoundEffects = () => {
 
     /** Page turn — soft whoosh */
     const playPageTurn = useCallback(() => {
-        if (isMutedRef.current) return;
         const ctx = getCtx();
         const bufferSize = ctx.sampleRate * 0.15;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -67,7 +61,6 @@ export const useSoundEffects = () => {
 
     /** Magic sparkle — ascending chime arpeggio */
     const playMagicSparkle = useCallback(() => {
-        if (isMutedRef.current) return;
         const ctx = getCtx();
         const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
         notes.forEach((freq, i) => {
@@ -88,7 +81,6 @@ export const useSoundEffects = () => {
 
     /** Book open — low thud + whoosh */
     const playBookOpen = useCallback(() => {
-        if (isMutedRef.current) return;
         const ctx = getCtx();
         // Thud
         const osc = ctx.createOscillator();
@@ -136,5 +128,5 @@ export const useSoundEffects = () => {
         }
     }, [playUiClick, playPageTurn, playMagicSparkle, playBookOpen]);
 
-    return { playSound, setMuted };
+    return { playSound };
 };

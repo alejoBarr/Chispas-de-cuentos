@@ -17,7 +17,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '8-9 años',
     tags: ['Clásico', 'Reflexión', 'Amistad'],
     description: 'Un pequeño príncipe que viaja de planeta en planeta aprende las lecciones más importantes de la vida.',
-    link: 'https://openlibrary.org/works/OL45883W/The_Little_Prince',
+    link: 'https://www.google.com/search?tbm=bks&q=El+Principito+Antoine+de+Saint-Exupéry',
   },
   {
     title: 'Matilda',
@@ -26,7 +26,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '8-9 años',
     tags: ['Magia', 'Humor', 'Escuela'],
     description: 'Una niña superdotada con poderes telequinéticos que descubre que los libros son su mayor tesoro.',
-    link: 'https://openlibrary.org/works/OL45883W',
+    link: 'https://www.google.com/search?tbm=bks&q=Matilda+Roald+Dahl',
   },
   {
     title: 'Las Brujas',
@@ -35,7 +35,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '8-9 años',
     tags: ['Fantasía', 'Aventura', 'Terror suave'],
     description: 'Un niño descubre una convención secreta de brujas reales. ¿Podrá escapar de su plan maléfico?',
-    link: 'https://openlibrary.org/search?q=las+brujas+roald+dahl',
+    link: 'https://www.google.com/search?tbm=bks&q=Las+Brujas+Roald+Dahl',
   },
 
   // 10-11 años
@@ -46,7 +46,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '10-11 años',
     tags: ['Fantasía', 'Tiempo', 'Amistad'],
     description: 'Una niña misteriosa lucha contra los Hombres Grises que roban el tiempo a las personas.',
-    link: 'https://openlibrary.org/search?q=momo+michael+ende',
+    link: 'https://www.google.com/search?tbm=bks&q=Momo+Michael+Ende',
   },
   {
     title: 'La Historia Interminable',
@@ -55,7 +55,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '10-11 años',
     tags: ['Fantasía', 'Aventura', 'Imaginación'],
     description: 'Bastian encuentra un libro antiguo que le transporta al mágico mundo de Fantasía, donde es el único que puede salvarla.',
-    link: 'https://openlibrary.org/search?q=la+historia+interminable',
+    link: 'https://www.google.com/search?tbm=bks&q=La+Historia+Interminable+Michael+Ende',
   },
   {
     title: 'El Capitán Calzoncillos',
@@ -64,7 +64,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '10-11 años',
     tags: ['Humor', 'Cómic', 'Aventura'],
     description: 'Dos amigos crean su propio cómic y, sin quererlo, hipnotizan a su director para convertirlo en un superhéroe de calzoncillos.',
-    link: 'https://openlibrary.org/search?q=capitan+calzoncillos',
+    link: 'https://www.google.com/search?tbm=bks&q=El+Capitán+Calzoncillos+Dav+Pilkey',
   },
 
   // 11-12 años
@@ -75,7 +75,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '11-12 años',
     tags: ['Fantasía', 'Épico', 'Clásico'],
     description: 'Cuatro hermanos descubren dentro de un armario el mundo de Narnia, gobernado por una bruja eterna.',
-    link: 'https://openlibrary.org/search?q=el+leon+la+bruja+y+el+armario',
+    link: 'https://www.google.com/search?tbm=bks&q=El+León+la+Bruja+y+el+Armario+CS+Lewis',
   },
   {
     title: 'El Hobbit',
@@ -84,7 +84,7 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '11-12 años',
     tags: ['Fantasía', 'Aventura', 'Épico'],
     description: 'El tranquilo hobbit Bilbo Bolsón emprende una aventura inesperada con enanos y un mago para recuperar un tesoro custodiado por un dragón.',
-    link: 'https://openlibrary.org/search?q=el+hobbit+tolkien',
+    link: 'https://www.google.com/search?tbm=bks&q=El+Hobbit+Tolkien',
   },
   {
     title: 'Charlie y la Fábrica de Chocolate',
@@ -93,6 +93,6 @@ export const CURATED_BOOKS: CuratedBook[] = [
     ageRange: '11-12 años',
     tags: ['Magia', 'Humor', 'Fantasía'],
     description: 'Charlie, un niño pobre, gana un boleto dorado para visitar la misteriosa fábrica de chocolate de Willy Wonka.',
-    link: 'https://openlibrary.org/search?q=charlie+fabrica+chocolate',
+    link: 'https://www.google.com/search?tbm=bks&q=Charlie+y+la+Fábrica+de+Chocolate+Roald+Dahl',
   },
 ];
